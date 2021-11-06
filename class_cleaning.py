@@ -48,20 +48,25 @@ class Str_checker():
 
 class Valid_checker():
     def check_valid_type(x_):
+        """
+        Returns 
+        """
         valid_type = ['CASH_OUT', 'PAYMENT', 'CASH_IN', 'TRANSFER', 'DEBIT']
         try:
             if (x_.type.isin(valid_type)).all() == True:
-                cvt_ = 'All Types are valid'
+                cvt_ = 'All Type values are valid'
                 Logger.logger_funct(cvt_)
                 return True
             else:
-                cvt_ = "Type has a misspelling"
+                invalid_ = x_[x_.type.isin(valid_type) == False].index.tolist()
+                cvt_ = "Type has an invalid value. Returning indices with invalid values: {}".format(invalid_)
                 Logger.logger_funct(cvt_)
-                return x_[~x_.type.isin(valid_type)]
+                return x_[x_.type.isin(valid_type)]
+                
         except ValueError as e:
             Logger.logger_funct(e)  
         except TypeError as e:
-            Logger.logger_funct(e)
+            Logger.logger_funct(e)  
 
 class Account_checker():
     def account_check(x_, y_):
@@ -73,13 +78,14 @@ class Account_checker():
                 Logger.logger_funct(ac_)
                 return True
             else:
-                ac_ = "{} is missing the correct information".format({y_})
+                invalid_ = x_[~x_[y_].str.startswith(valid_tuple)].index.tolist()
+                ac_ = "{} is missing the correct information. Returning indices with invalid information : {}".format(y_, invalid_)
                 Logger.logger_funct(ac_)
-                return x_[~x_[y_].str.startswith(valid_tuple)]
+                return x_[x_[y_].str.startswith(valid_tuple)]
         except ValueError as e:
             Logger.logger_funct(e)  
         except TypeError as e:
-            Logger.logger_funct(e)  
+            Logger.logger_funct(e)   
 
 class Positive_checker():
     def check_positive(x_, y_):
@@ -89,9 +95,11 @@ class Positive_checker():
                 Logger.logger_funct(cp_)
                 return True 
             else:
-                cp_ = 'There are values for {} that are not postive'.format(y_)
+                invalid_ = x_[(x_[y_] < 0) | (x_[y_].isnull())].index.tolist()
+                cp_ = 'There are values for {} that are not postive. Returning indices with nonpositive values : {}'.format(y_, invalid_)
                 Logger.logger_funct(cp_)
-                return x_[(x_[y_] < 0) | (x_[y_].isnull())]
+                #return x_[(x_[y_] < 0) | (x_[y_].isnull())]
+                return x_[~(x_[y_] < 0) | (x_[y_].isnull())]
         except ValueError as e:
             Logger.logger_funct(e)  
         except TypeError as e:
@@ -105,7 +113,8 @@ class Difference_name():
                 Logger.logger_funct(odd_)
                 return True
             else:
-                odd_ = "There are name accounts that are the same"
+                invalid_ = x_[~(x_[y_] != x_[z_])].index.tolist()
+                odd_ = "There are name accounts that are the same. Returning indices with same bank account names : {}".format(invalid_)
                 Logger.logger_funct(odd_)
                 return x_[~(x_[y_] != x_[z_])]
         except ValueError as e:
@@ -135,9 +144,7 @@ class Convert_checker():
         """
         Convert columns that contain "string" into numeric by using an encoder
         """
-
-        #training already tested, keep reverse mapping - CHECK
-
+        
         valid_type = ['CASH_OUT', 'PAYMENT', 'CASH_IN', 'TRANSFER', 'DEBIT']
         encodertype = LabelEncoder()
         encodertype.fit(valid_type)

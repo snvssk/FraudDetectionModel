@@ -107,16 +107,17 @@ class Model:
 #         logging.info('Model Saved, file name : {}'.format(filename))
         
     def packagingModel(self):
-        filename = './ModelPackages/' + datetime.now().strftime("%Y-%m-%d %H:%M") +'_'+ str(self.model_type) + '_model.pkl' 
-        with open(filename, 'wb') as model_file: 
+        filename = '245-project/ModelPackages/' + datetime.now().strftime("%Y-%m-%d %H:%M") +'_'+ str(self.model_type) + '_model.pkl' 
+        fs = gcsfs.GCSFileSystem(project = 'navyamohan-data228-project')
+        with fs.open(filename, 'wb') as model_file: 
             pickle.dump(self.user_defined_model, model_file)
         logging.info('Model Saved, file name : {}'.format(filename))
 
 if __name__ == '__main__':
     model_instance1 = Model(model_type = 'rf')
     model_instance1.split(0.2)
-    model_instance1.fit()   
-#     model_instance1.packagingModel()
+    model_instance1.fit()        
+    model_instance1.packagingModel()
     model_instance1.model_result()
     model_instance1.kfoldValidation()
 

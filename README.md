@@ -1,4 +1,11 @@
 # FraudDetectionModel
-FraudDetection
 
-# PIP install list
+
+pip install list
+
+fsspec
+gcsfs
+pandas
+numpy
+sklearn
+

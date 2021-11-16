@@ -127,9 +127,8 @@ class Model:
 
 if __name__ == '__main__':
     model_instance1 = Model(model_type = 'rf')
-    model_instance1.split(0.2)
-    model_instance1.fit()        
-    model_instance1.packagingModel()
-    model_instance1.model_result()
+    #model_instance1.split(0.2)
+    #model_instance1.fit()        
     model_instance1.kfoldValidation()
+    model_instance1.packagingModel()
 

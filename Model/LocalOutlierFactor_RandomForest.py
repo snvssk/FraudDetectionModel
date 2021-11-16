@@ -70,6 +70,7 @@ class Model:
         logging.info('data split complete')
     
     def fit(self):
+        logging.info('Fitting Training Data : {}') 
         self.model = self.user_defined_model.fit(self.X_train, self.y_train)
 
     
@@ -111,7 +112,8 @@ class Model:
             i+=1
             Model.stkflod_RF(self)
             
-    def stkflod_RF(self):   
+    def stkflod_RF(self):
+        logging.info('Entered into Stratified Kfold Fitting process : {}')   
         Model.fit(self)
         Model.model_result(self)
          
@@ -126,7 +128,7 @@ class Model:
         os.system('gsutil cp -r '+'../ModelPackages/' + todaydate+ ' ' +model_storage)
 
 if __name__ == '__main__':
-    model_instance1 = Model(model_type = 'rf')
+    model_instance1 = Model(model_type = 'lof')
     #model_instance1.split(0.2)
     #model_instance1.fit()        
     model_instance1.kfoldValidation()

@@ -10,8 +10,11 @@ from datetime import datetime
 import pickle 
 import logging
 import warnings
+import sys
+from datetime import date
+import os
 sys.path.append("../conf")
-import gcp_conf
+from gcp_conf import *
 
 warnings.filterwarnings("ignore")
 
@@ -25,12 +28,21 @@ logging.basicConfig(filename='Model_log.log',
                             level=logging.INFO)
 logging.info('Info message')
 
+#Take the date
+today = date.today()
+#Format the date
+todaydate = today.strftime('%d%m%Y')
 
-#data input
-inputfile = 'gs://245_project/data_01112021.csv'
+#processed data input
+processedfile = 'gs://'+ml_data_bucket+'/'+ml_processed_data_folder_name+"/"+todaydate+"/" +ml_processed_data_file_name
+
+
+#Packaged Model
+model_storage = 'gs://'+ml_model_store_bucket_name+"/"
+
 
 class Model:
-    def __init__(self, datafile = inputfile, model_type = None):
+    def __init__(self, datafile = processedfile, model_type = None):
         self.df = pd.read_csv(datafile)
 #         self.df = self.df.sample(frac=0.01) # Size of data frame is reduced
         self.model_type = model_type
@@ -102,19 +114,16 @@ class Model:
     def stkflod_RF(self):   
         Model.fit(self)
         Model.model_result(self)
-        
-#     def packagingModel(self):
-#         filename = './ModelPackages/' + datetime.now().strftime("%Y-%m-%d %H:%M") +'_'+ str(self.model_type) + '_model.pkl' 
-#         with open(filename, 'wb') as model_file: 
-#             pickle.dump(self.user_defined_model, model_file)
-#         logging.info('Model Saved, file name : {}'.format(filename))
-        
+         
     def packagingModel(self):
-        filename = '../ModelPackages/' + datetime.now().strftime("%Y-%m-%d %H:%M") +'_'+ str(self.model_type) + '_model.pkl' 
-        fs = gcsfs.GCSFileSystem(project = gcp_project)
-        with fs.open(filename, 'wb') as model_file: 
+        os.mkdir ('../ModelPackages/' + todaydate)
+        filename = '../ModelPackages/' + todaydate + "/"+ datetime.now().strftime("%Y-%m-%d %H:%M") +'_'+ str(self.model_type) + '_model.pkl' 
+        
+        with open(filename, 'wb') as model_file:
             pickle.dump(self.user_defined_model, model_file)
         logging.info('Model Saved, file name : {}'.format(filename))
+        #upload to GCS
+        os.system('gsutil cp -r '+'../ModelPackages/' + todaydate+ ' ' +model_storage)
 
 if __name__ == '__main__':
     model_instance1 = Model(model_type = 'rf')

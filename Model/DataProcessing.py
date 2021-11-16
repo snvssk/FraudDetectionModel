@@ -1,12 +1,16 @@
 import pandas as pd
 import numpy as np
-import os 
 from datetime import date
-
 from sklearn.preprocessing import LabelEncoder
-
-import collections
 import logging
+import sys
+import os
+sys.path.append("../conf")
+from gcp_conf import *
+
+
+inputfile = 'gs://'+ml_data_bucket+'/'+ml_raw_data_folder_name+"/20211116/" +ml_raw_data_file_name
+outputfolder = 'gs://'+ml_data_bucket+'/'+ml_processed_data_folder_name+"/"
 
 class Logger():
     def logger_funct(x_): 
@@ -188,18 +192,26 @@ class CSVHandler():
         #Format the date
         todaydate = today.strftime('%d%m%Y')
         #Create file name
-        filename = 'data_{}.csv'.format(todaydate)
+        #filename = 'data_{}.csv'.format(todaydate)
+        folder_path  = outputfolder+ todaydate
+        os.mkdir(todaydate)
+        filename = "processed_payments.csv"
         #export file as CSV
 
         ecsv_ = "Exporting as CSV"
         Logger.logger_funct(ecsv_)
+        #Local Folder with processed CSV
+        x_.to_csv(todaydate+"/"+filename, index = False)
 
-        x_.to_csv(filename, index = False)
+        #upload to GCS
+        os.system('gsutil cp -r '+todaydate+ ' ' +outputfolder)
+        
+        
 
 if __name__ == '__main__':
-
-    os.chdir('/Users/michelleyuu/Desktop/data245/project/')
-    df = pd.read_csv('PS_20174392719_1491204439457_log.csv')
+   
+    
+    df = pd.read_csv(inputfile)
 
     def DataValidation(data_, amt_, obo, nbo, obd, nbd, no_, nd_):
 

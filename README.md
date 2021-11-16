@@ -1,11 +1,5 @@
 # FraudDetectionModel
 
 
-pip install list
-
-fsspec
-gcsfs
-pandas
-numpy
-sklearn
+pip install --upgrade fsspec gcsfs pandas numpy sklearn
 

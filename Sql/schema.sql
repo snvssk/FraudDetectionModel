@@ -21,5 +21,12 @@ create or replace table ml_project.metric (
     falsePositive FLOAT64,
     falseNegetive FLOAT64
     >,
-    accuracy FLOAT64
+    accuracy FLOAT64,
+    auprc FLOAT64
+);
+
+create or replace table ml_project.model_winner (
+    timestamp timestamp,
+    modelName string,
+    model_pkl_link string
 );

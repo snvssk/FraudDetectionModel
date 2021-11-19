@@ -17,9 +17,9 @@ create or replace table ml_project.metric (
     trainDatasetSize integer,
     confusionMatrix struct<
     truePositive FLOAT64,
-    trueNegetive FLOAT64,
+    trueNegative FLOAT64,
     falsePositive FLOAT64,
-    falseNegetive FLOAT64
+    falseNegative FLOAT64
     >,
     accuracy FLOAT64,
     auprc FLOAT64

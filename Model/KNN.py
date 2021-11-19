@@ -5,10 +5,17 @@ from sklearn.metrics import average_precision_score, f1_score,confusion_matrix,a
 from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import StratifiedKFold
 import logging
+from datetime import date
 import faiss
+from datetime import datetime
+import pickle 
 import time
-from google.cloud import bigquery
 import json
+import sys
+import os
+from google.cloud import bigquery
+sys.path.append("../conf")
+from gcp_conf import *
 
 client = bigquery.Client()
 
@@ -18,11 +25,19 @@ logging.basicConfig(filename='knn.log',
                             filemode='w+',
                             format=FORMAT,
                             datefmt='%Y-%b-%d %X%z',
-                            level=logging.DEBUG)
+                            level=logging.INFO)
 
-logging.info('Loading data from temporary location')
-#data input
-inputfile = 'data_01112021.csv'
+#Take the date
+today = date.today()
+#Format the date
+todaydate = today.strftime('%d%m%Y')
+
+#processed data input
+processedfile = 'gs://'+ml_data_bucket+'/'+ml_processed_data_folder_name+"/"+todaydate+"/" +ml_processed_data_file_name
+
+
+#Packaged Model
+model_storage = 'gs://'+ml_model_store_bucket_name+"/"
 
 class FaissKNeighbors:
     def __init__(self, k=5):
@@ -41,7 +56,7 @@ class FaissKNeighbors:
         return predictions
 
 class Model:
-    def __init__(self, datafile = inputfile, model_type = None):
+    def __init__(self, datafile = processedfile, model_type = None):
         self.model_type = model_type
         logging.info('Data loaded, filename : {0}, rows : {1}, columns : {2}'.format(datafile,self.df.shape[0],self.df.shape[1]))
         self.user_defined_model = FaissKNeighbors(3)
@@ -106,9 +121,20 @@ class Model:
         Model.fit(self)
         Model.model_result(self)
 
+    def packagingModel(self):
+        os.mkdir ('../ModelPackages/' + todaydate)
+        filename = '../ModelPackages/' + todaydate + "/"+ datetime.now().strftime("%Y-%m-%d %H:%M") +'_'+ str(self.model_type) + '_model.pkl' 
+        
+        with open(filename, 'wb') as model_file:
+            pickle.dump(self.user_defined_model, model_file)
+        logging.info('Model Saved, file name : {}'.format(filename))
+        #upload to GCS
+        os.system('gsutil cp -r '+'../ModelPackages/' + todaydate+ ' ' +model_storage)
+
     def writeDataToBigQuery(tableName, jsonData):
         client.insert_rows_json(tableName, jsonData)
 
 if __name__ == '__main__':
     model_instance = Model(model_type = 'knn')
     model_instance.kfoldValidation()
+    model_instance.packagingModel()

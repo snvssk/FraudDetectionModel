@@ -7,7 +7,10 @@ from sklearn.svm import LinearSVC
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import StratifiedKFold
+from datetime import datetime
+import pickle 
 import logging
+from datetime import date
 import time
 import json
 import sys
@@ -38,7 +41,7 @@ logging.basicConfig(filename='svm.log',
                             filemode='w+',
                             format=FORMAT,
                             datefmt='%Y-%b-%d %X%z',
-                            level=logging.DEBUG)
+                            level=logging.INFO)
 
 class Model:
     def __init__(self, datafile = processedfile, model_type = None):
@@ -75,6 +78,7 @@ class Model:
 
         logging.info('big query insertion : {}'.format(str(json.dumps(data))))
         Model.writeDataToBigQuery('ml_project.metric2', json.loads(str(json.dumps(data))))
+
 
     def current_milli_time():
         return round(time.time())
@@ -116,3 +120,4 @@ class Model:
 if __name__ == '__main__':
     model_instance = Model(model_type = 'svm')
     model_instance.kfoldValidation()
+    model_instance.packagingModel()

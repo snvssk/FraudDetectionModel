@@ -6,6 +6,11 @@ from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import StratifiedKFold
 import logging
 import faiss
+import time
+from google.cloud import bigquery
+import json
+
+client = bigquery.Client()
 
 FORMAT = '%(asctime)s:%(name)s:%(levelname)s - %(message)s'
 
@@ -41,7 +46,7 @@ class Model:
         self.model_type = model_type
         logging.info('Data loaded, filename : {0}, rows : {1}, columns : {2}'.format(datafile,self.df.shape[0],self.df.shape[1]))
         self.user_defined_model = FaissKNeighbors(3)
-    
+
     def fit(self):
         label_df = self.y_train.to_frame()
         fraud_training_indexes = label_df[label_df['isFraud'] == 1].index
@@ -58,8 +63,29 @@ class Model:
         logging.info('Confusion Matrix : {}'.format(confusion_matrix(self.y_test,y_pred)))
         logging.info('accuracy_score : {}'.format(accuracy_score(self.y_test,y_pred)))
         logging.info('classification_report : {}'.format(classification_report(self.y_test,y_pred)))
+        tn, fp, fn, tp = confusion_matrix(self.y_test,y_pred).ravel()
+        data = [{
+            'timestamp' : str(Model.current_milli_time()),
+            'modelName' : self.model_type,
+            'foldNumber' : self.foldNumber,
+            'testDataSetSize': len(self.X_test),
+            'trainDataSetSize' : len(self.X_train),
+            'accuracy' : accuracy_score(self.y_test,y_pred),
+            'confusionMatrix' : {
+                'truePositive' : int(tp),
+                'trueNegative' : int(tn),
+                'falsePositive' : int(fp),
+                'falseNegative' : int(fn)
+            }
+        }]
 
-            
+        logging.info('big query insertion : {}'.format(str(json.dumps(data))))
+        Model.writeDataToBigQuery('ml_project.metric2', json.loads(str(json.dumps(data))))
+
+    def current_milli_time():
+        return round(time.time())
+
+
     def kfoldValidation(self):
         logging.info('*******KfoldValidation****** : {}'.format(self.user_defined_model))
         cv = StratifiedKFold(n_splits=5, random_state=123, shuffle=True)
@@ -68,6 +94,7 @@ class Model:
         logging.info('number of splits : {}'.format(cv.get_n_splits(X, y)))
         i=1
         for train_index, test_index in cv.split(X, y):
+            self.foldNumber = i
             logging.info('Fold : {}'.format(i))
             logging.info('TRAIN : {0}, TEST : {1}'.format(train_index,test_index))
             #Pick Selected Training and Testing index(row numbers) and create Traing and Testing Folds
@@ -75,10 +102,13 @@ class Model:
             self.y_train, self.y_test = y.iloc[train_index], y.iloc[test_index]
             i+=1
             Model.stkflod_RF(self)
-            
-    def stkflod_RF(self):   
+
+    def stkflod_RF(self):
         Model.fit(self)
         Model.model_result(self)
+
+    def writeDataToBigQuery(tableName, jsonData):
+        client.insert_rows_json(tableName, jsonData)
 
 if __name__ == '__main__':
     model_instance = Model(model_type = 'knn')

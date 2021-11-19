@@ -10,7 +10,25 @@ from sklearn.model_selection import StratifiedKFold
 import logging
 import time
 import json
+import sys
+import os
 from google.cloud import bigquery
+sys.path.append("../conf")
+from gcp_conf import *
+
+
+#Take the date
+today = date.today()
+#Format the date
+todaydate = today.strftime('%d%m%Y')
+
+#processed data input
+processedfile = 'gs://'+ml_data_bucket+'/'+ml_processed_data_folder_name+"/"+todaydate+"/" +ml_processed_data_file_name
+
+
+#Packaged Model
+model_storage = 'gs://'+ml_model_store_bucket_name+"/"
+
 
 client = bigquery.Client()
 
@@ -22,12 +40,9 @@ logging.basicConfig(filename='svm.log',
                             datefmt='%Y-%b-%d %X%z',
                             level=logging.DEBUG)
 
-logging.info('Loading data from temporary location')
-#data input
-inputfile = 'data_01112021.csv'
-
 class Model:
-    def __init__(self, datafile = inputfile, model_type = None):
+    def __init__(self, datafile = processedfile, model_type = None):
+        logging.info('Loading data from:' + datafile)
         self.df = pd.read_csv(datafile)
         self.model_type = model_type
         logging.info('Data loaded, filename : {0}, rows : {1}, columns : {2}'.format(datafile,self.df.shape[0],self.df.shape[1]))
@@ -84,6 +99,16 @@ class Model:
     def stkflod_RF(self):   
         Model.fit(self)
         Model.model_result(self)
+
+    def packagingModel(self):
+        os.mkdir ('../ModelPackages/' + todaydate)
+        filename = '../ModelPackages/' + todaydate + "/"+ datetime.now().strftime("%Y-%m-%d %H:%M") +'_'+ str(self.model_type) + '_model.pkl' 
+        
+        with open(filename, 'wb') as model_file:
+            pickle.dump(self.user_defined_model, model_file)
+        logging.info('Model Saved, file name : {}'.format(filename))
+        #upload to GCS
+        os.system('gsutil cp -r '+'../ModelPackages/' + todaydate+ ' ' +model_storage)
 
     def writeDataToBigQuery(tableName, jsonData):
         client.insert_rows_json(tableName, jsonData)

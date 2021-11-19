@@ -11,6 +11,17 @@ import pickle
 import logging
 import warnings
 warnings.filterwarnings("ignore")
+import gcsfs
+from google.cloud import bigquery
+import json
+import time
+import math
+#project_id = "fraud-detection-data245"
+project_id = "navyamohan-data228-project"
+
+table_id = "ml_project.metric_test"
+
+client = bigquery.Client(project = project_id)
 
 
 FORMAT = '%(asctime)s:%(name)s:%(levelname)s - %(message)s'
@@ -58,26 +69,28 @@ class Model:
         self.model = self.user_defined_model.fit(self.X_train, self.y_train)
 
     
-    def model_result(self):
+     def model_result(self):
         if self.model_type == 'lof':
-            y_pred=self.user_defined_model.fit_predict(self.X_test)
-            y_pred[y_pred == 1] = 0 # Valid transactions are labelled as 0.
-            y_pred[y_pred == -1] = 1 # Fraudulent transactions are labelled as 1.
+            self.y_pred=self.user_defined_model.fit_predict(self.X_test)
+            self.y_pred[self.y_pred == 1] = 0 # Valid transactions are labelled as 0.
+            self.y_pred[self.y_pred == -1] = 1 # Fraudulent transactions are labelled as 1.
+            self.auprc = 0
             logging.info('Confusion_matrix : ')
-            logging.info('{}'.format(confusion_matrix(self.y_test,y_pred)))
-            logging.info('accuracy_score : {}'.format(accuracy_score(self.y_test,y_pred)))
-            logging.info('errors : {}'.format((y_pred != self.y_test).sum())) # Total number of errors is calculated.
-            logging.info('classification_report : {}'.format(classification_report(self.y_test,y_pred)))
+            logging.info('{}'.format(confusion_matrix(self.y_test,self.y_pred)))
+            logging.info('accuracy_score : {}'.format(accuracy_score(self.y_test,self.y_pred)))
+            logging.info('errors : {}'.format((self.y_pred != self.y_test).sum())) # Total number of errors is calculated.
+            logging.info('classification_report : {}'.format(classification_report(self.y_test,self.y_pred)))
             
             
         else:
-            y_prob=self.user_defined_model.predict_proba(self.X_test)
-            y_pred=self.user_defined_model.predict(self.X_test) 
-            logging.info('AUPRC : {}'.format(average_precision_score(self.y_test, y_prob[:, 1])))
-            logging.info('F1_score : {}'.format(f1_score(self.y_test,y_pred)))
-            logging.info('Confusion Matrix : {}'.format(confusion_matrix(self.y_test,y_pred)))
-            logging.info('accuracy_score : {}'.format(accuracy_score(self.y_test,y_pred)))
-            logging.info('classification_report : {}'.format(classification_report(self.y_test,y_pred)))
+            self.y_prob=self.user_defined_model.predict_proba(self.X_test)
+            self.y_pred=self.user_defined_model.predict(self.X_test)
+            self.auprc = average_precision_score(self.y_test,self.y_prob[:-1])
+            logging.info('AUPRC : {}'.format(average_precision_score(self.y_test, self.y_prob[:, 1])))
+            logging.info('F1_score : {}'.format(f1_score(self.y_test,self.y_pred)))
+            logging.info('Confusion Matrix : {}'.format(confusion_matrix(self.y_test,self.y_pred)))
+            logging.info('accuracy_score : {}'.format(accuracy_score(self.y_test,self.y_pred)))
+            logging.info('classification_report : {}'.format(classification_report(self.y_test,self.y_pred)))
 
             
     def kfoldValidation(self):
@@ -88,6 +101,7 @@ class Model:
         logging.info('number of splits : {}'.format(cv.get_n_splits(X, y)))
         i=1
         for train_index, test_index in cv.split(X, y):
+            self.foldNumber = i
             logging.info('Fold : {}'.format(i))
             logging.info('TRAIN : {0}, TEST : {1}'.format(train_index,test_index))
             #Pick Selected Training and Testing index(row numbers) and create Traing and Testing Folds
@@ -99,6 +113,32 @@ class Model:
     def stkflod_RF(self):   
         Model.fit(self)
         Model.model_result(self)
+        tn, fp, fn, tp = confusion_matrix(self.y_test,self.y_pred).ravel()
+        data = [{
+                    'timestamp' : str(Model.current_milli_time()),
+                    'modelName' : self.model_type,
+                    'foldNumber' : self.foldNumber,
+                    'testDataSetSize': len(self.X_test),
+                    'trainDataSetSize' : len(self.X_train),
+                    'accuracy' : accuracy_score(self.y_test,self.y_pred),
+                    'confusionMatrix' : {
+                        'truePositive' : int(tp),
+                        'trueNegative' : int(tn),
+                        'falsePositive' : int(fp),
+                        'falseNegative' : int(fn)
+                    },
+                    'auprc' : self.auprc
+             }]
+
+        logging.info('big query insertion : {}'.format(str(json.dumps(data))))
+        Model.writeDataToBigQuery(table_id, json.loads(str(json.dumps(data))))
+
+    def current_milli_time():
+        return round(time.time())
+
+
+    def writeDataToBigQuery(tableName, jsonData):
+        client.insert_rows_json(tableName, jsonData)
         
 #     def packagingModel(self):
 #         filename = './ModelPackages/' + datetime.now().strftime("%Y-%m-%d %H:%M") +'_'+ str(self.model_type) + '_model.pkl' 

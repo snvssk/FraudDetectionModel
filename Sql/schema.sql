@@ -14,7 +14,7 @@ create or replace table ml_project.metric (
     modelName string,
     foldNumber integer,
     testDataSetSize integer,
-    trainDatasetSize integer,
+    trainDataSetSize integer,
     confusionMatrix struct<
     truePositive FLOAT64,
     trueNegative FLOAT64,

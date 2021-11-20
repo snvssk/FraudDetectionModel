@@ -58,6 +58,7 @@ class FaissKNeighbors:
 class Model:
     def __init__(self, datafile = processedfile, model_type = None):
         self.model_type = model_type
+        self.df = pd.read_csv(datafile)
         logging.info('Data loaded, filename : {0}, rows : {1}, columns : {2}'.format(datafile,self.df.shape[0],self.df.shape[1]))
         self.user_defined_model = FaissKNeighbors(3)
 

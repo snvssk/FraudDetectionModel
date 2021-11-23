@@ -31,7 +31,7 @@ logging.basicConfig(filename='knn.log',
 today = date.today()
 #Format the date
 todaydate = today.strftime('%d%m%Y')
-
+todaydate = '19112021'
 #processed data input
 processedfile = 'gs://'+ml_data_bucket+'/'+ml_processed_data_folder_name+"/"+todaydate+"/" +ml_processed_data_file_name
 
@@ -95,7 +95,7 @@ class Model:
         }]
 
         logging.info('big query insertion : {}'.format(str(json.dumps(data))))
-        Model.writeDataToBigQuery('ml_project.metric2', json.loads(str(json.dumps(data))))
+        Model.writeDataToBigQuery('ml_project.metric', json.loads(str(json.dumps(data))))
 
     def current_milli_time():
         return round(time.time())

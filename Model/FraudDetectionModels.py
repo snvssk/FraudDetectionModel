@@ -96,6 +96,10 @@ class Model:
             logging.info('******** KNN ******')
             self.user_defined_model = FaissKNeighbors(3)
             logging.info('Model : {}'.format(self.user_defined_model))
+        elif self.model_type == 'svm':
+            logging.info('******* SVM *******')
+            self.user_defined_model = make_pipeline(StandardScaler(), LinearSVC(random_state=0, tol=1e-5, verbose=1))
+            logging.info('Model : {}'.format(self.user_defined_model))
             
     def fit(self):
         logging.info('Fitting Training Data : {}') 
@@ -127,7 +131,7 @@ class Model:
             
         elif self.model_type == 'rf':
             self.y_prob=self.user_defined_model.predict_proba(self.X_test)
-            self.y_pred=self.user_defined_model.predict(self.X_test) 
+            self.y_pred=self.user_defined_model.predict(self.X_test)
             self.auprc = average_precision_score(self.y_test,self.y_prob[:, 1])
             logging.info('AUPRC : {}'.format(average_precision_score(self.y_test, self.y_prob[:, 1])))
             logging.info('F1_score : {}'.format(f1_score(self.y_test,self.y_pred)))
@@ -143,7 +147,13 @@ class Model:
             logging.info('accuracy_score : {}'.format(accuracy_score(self.y_test,self.y_pred)))
             logging.info('classification_report : {}'.format(classification_report(self.y_test,self.y_pred)))
             
-
+        elif self.model_type == 'svm':
+            self.y_pred=self.user_defined_model.predict(self.X_test)
+            self.auprc = -1.0
+            logging.info('F1_score : {}'.format(f1_score(self.y_test,self.y_pred)))
+            logging.info('Confusion Matrix : {}'.format(confusion_matrix(self.y_test,self.y_pred)))
+            logging.info('accuracy_score : {}'.format(accuracy_score(self.y_test,self.y_pred)))
+            logging.info('classification_report : {}'.format(classification_report(self.y_test,self.y_pred)))
             
     def kfoldValidation(self):
         logging.info('*******KfoldValidation****** : {}'.format(self.user_defined_model))

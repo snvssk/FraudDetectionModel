@@ -128,7 +128,7 @@ class Model:
         elif self.model_type == 'rf':
             self.y_prob=self.user_defined_model.predict_proba(self.X_test)
             self.y_pred=self.user_defined_model.predict(self.X_test) 
-            self.auprc = average_precision_score(self.y_test,self.y_prob[:-1])
+            self.auprc = average_precision_score(self.y_test,self.y_prob[:, 1])
             logging.info('AUPRC : {}'.format(average_precision_score(self.y_test, self.y_prob[:, 1])))
             logging.info('F1_score : {}'.format(f1_score(self.y_test,self.y_pred)))
             logging.info('Confusion Matrix : {}'.format(confusion_matrix(self.y_test,self.y_pred)))
@@ -136,11 +136,11 @@ class Model:
             logging.info('classification_report : {}'.format(classification_report(self.y_test,self.y_pred)))
 
         elif self.model_type == 'knn':
-            y_pred=self.user_defined_model.predict(np.ascontiguousarray(self.X_test))
-            logging.info('F1_score : {}'.format(f1_score(self.y_test,y_pred)))
-            logging.info('Confusion Matrix : {}'.format(confusion_matrix(self.y_test,y_pred)))
-            logging.info('accuracy_score : {}'.format(accuracy_score(self.y_test,y_pred)))
-            logging.info('classification_report : {}'.format(classification_report(self.y_test,y_pred)))
+            self.y_pred=self.user_defined_model.predict(np.ascontiguousarray(self.X_test))
+            logging.info('F1_score : {}'.format(f1_score(self.y_test,self.y_pred)))
+            logging.info('Confusion Matrix : {}'.format(confusion_matrix(self.y_test,self.y_pred)))
+            logging.info('accuracy_score : {}'.format(accuracy_score(self.y_test,self.y_pred)))
+            logging.info('classification_report : {}'.format(classification_report(self.y_test,self.y_pred)))
             
 
             
@@ -198,7 +198,7 @@ class Model:
          
     def packagingModel(self):
         Path('../ModelPackages/' + todaydate).mkdir(parents=True, exist_ok=True)
-        filename = '../ModelPackages/' + todaydate + "/"+ datetime.now().strftime("%Y-%m-%d %H:%M") +'_'+ str(self.model_type) +'_fold_'+ str(self.foldNumber) +'_model.pkl'
+        filename = '../ModelPackages/' + todaydate + "/"+ datetime.now().strftime("%Y-%m-%d_%H:%M") +'_'+ str(self.model_type) +'_fold_'+ str(self.foldNumber) +'_model.pkl'
         
         with open(filename, 'wb') as model_file:
             pickle.dump(self.user_defined_model, model_file)

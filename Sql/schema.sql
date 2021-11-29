@@ -30,7 +30,7 @@ create or replace table ml_project.metric (
     >,
     accuracy FLOAT64,
     auprc FLOAT64,
-    model_exec_starttime timestamp
+    fold_exec_starttime timestamp
 );
 
 

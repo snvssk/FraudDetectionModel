@@ -126,7 +126,7 @@ class Model:
             self.training_starting_time = round(time.time())
             Model.stkflod_RF(self)
             
-    def stkflod_RF(self,exec_start_time):
+    def stkflod_RF(self):
         logging.info('Entered into Stratified Kfold Fitting process : {}')   
         Model.fit(self)
         Model.model_result(self)

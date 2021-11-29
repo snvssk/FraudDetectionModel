@@ -161,7 +161,7 @@ class Model:
          
     def packagingModel(self):
         Path('../ModelPackages/' + todaydate).mkdir(parents=True, exist_ok=True)
-        filename = '../ModelPackages/' + todaydate + "/"+ datetime.now().strftime("%Y-%m-%d %H:%M") +'_'+ str(self.model_type) +'_fold_'+ self.foldNumber + +'_model.pkl'
+        filename = '../ModelPackages/' + todaydate + "/"+ datetime.now().strftime("%Y-%m-%d %H:%M") +'_'+ str(self.model_type) +'_fold_'+ str(self.foldNumber)+'_model.pkl'
         
         with open(filename, 'wb') as model_file:
             pickle.dump(self.user_defined_model, model_file)

@@ -187,7 +187,7 @@ class Model:
 
         logging.info('big query insertion : {}'.format(str(json.dumps(data))))
         Model.writeDataToBigQuery(table_id, json.loads(str(json.dumps(data))))
-        Model.packagingModel()
+        Model.packagingModel(self)
         
     def current_milli_time():
         return round(time.time())

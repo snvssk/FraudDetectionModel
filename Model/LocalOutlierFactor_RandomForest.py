@@ -7,6 +7,7 @@ from sklearn.neighbors import LocalOutlierFactor
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import StratifiedKFold
 from datetime import datetime
+from pathlib import Path
 import pickle 
 import logging
 import warnings
@@ -23,11 +24,9 @@ from gcp_conf import *
 
 warnings.filterwarnings("ignore")
 
-#project_id = "fraud-detection-data245"
-project_id = "navyamohan-data228-project" #need to change in production version
-table_id = "ml_project.metric_test" #need to change in production version
+table_id = "ml_project.metric" 
 
-client = bigquery.Client(project = project_id)
+client = bigquery.Client()
 
 
 FORMAT = '%(asctime)s:%(name)s:%(levelname)s - %(message)s'
@@ -65,7 +64,7 @@ class Model:
             try : # to handle divide by zero error
                 outlier_fraction = len(fraud)/float(len(valid))
             except ZeroDivisionError:
-                logginf.error('Divide by Zero error at outlier fraction calculation')
+                logging.error('Divide by Zero error at outlier fraction calculation')
                 outlier_fraction = 0
             self.user_defined_model = LocalOutlierFactor(n_neighbors = 20,contamination = outlier_fraction)
             logging.info('Model : {}'.format(self.user_defined_model))
@@ -158,7 +157,7 @@ class Model:
         client.insert_rows_json(tableName, jsonData)
          
     def packagingModel(self):
-        os.mkdir ('../ModelPackages/' + todaydate)
+        Path('../ModelPackages/' + todaydate).mkdir(parents=True, exist_ok=True)
         filename = '../ModelPackages/' + todaydate + "/"+ datetime.now().strftime("%Y-%m-%d %H:%M") +'_'+ str(self.model_type) + '_model.pkl' 
         
         with open(filename, 'wb') as model_file:

@@ -7,7 +7,14 @@ create or replace table ml_project.data_predictions (
     predictionDataLink string
 );
 
-
+create or replace table ml_project.data_preparation (
+    timestamp timestamp,
+    numOfInputRecords integer,
+    numOfProcessedRecords integer,
+    inputDataLink string,
+    processedDataLink string,
+    data_prep_starttime timestamp
+);
 
 create or replace table ml_project.metric (
     timestamp timestamp,
@@ -22,8 +29,10 @@ create or replace table ml_project.metric (
     falseNegative FLOAT64
     >,
     accuracy FLOAT64,
-    auprc FLOAT64
+    auprc FLOAT64,
+    model_exec_starttime timestamp
 );
+
 
 create or replace table ml_project.model_winner (
     timestamp timestamp,

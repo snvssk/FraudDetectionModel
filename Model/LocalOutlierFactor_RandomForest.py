@@ -148,6 +148,7 @@ class Model:
 
         logging.info('big query insertion : {}'.format(str(json.dumps(data))))
         Model.writeDataToBigQuery(table_id, json.loads(str(json.dumps(data))))
+        Model.packagingModel(fold_number=self.foldNumber)
         
     def current_milli_time():
         return round(time.time())
@@ -156,9 +157,9 @@ class Model:
     def writeDataToBigQuery(tableName, jsonData):
         client.insert_rows_json(tableName, jsonData)
          
-    def packagingModel(self):
+    def packagingModel(self,fold_number):
         Path('../ModelPackages/' + todaydate).mkdir(parents=True, exist_ok=True)
-        filename = '../ModelPackages/' + todaydate + "/"+ datetime.now().strftime("%Y-%m-%d %H:%M") +'_'+ str(self.model_type) + '_model.pkl' 
+        filename = '../ModelPackages/' + todaydate + "/"+ datetime.now().strftime("%Y-%m-%d %H:%M") +'_'+ str(self.model_type) +'_fold_'+ fold_number +'_model.pkl'
         
         with open(filename, 'wb') as model_file:
             pickle.dump(self.user_defined_model, model_file)
@@ -171,5 +172,5 @@ if __name__ == '__main__':
     #model_instance1.split(0.2)
     #model_instance1.fit()        
     model_instance1.kfoldValidation()
-    model_instance1.packagingModel()
+    
 

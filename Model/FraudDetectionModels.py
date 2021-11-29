@@ -137,6 +137,7 @@ class Model:
 
         elif self.model_type == 'knn':
             self.y_pred=self.user_defined_model.predict(np.ascontiguousarray(self.X_test))
+            self.auprc = -1.0
             logging.info('F1_score : {}'.format(f1_score(self.y_test,self.y_pred)))
             logging.info('Confusion Matrix : {}'.format(confusion_matrix(self.y_test,self.y_pred)))
             logging.info('accuracy_score : {}'.format(accuracy_score(self.y_test,self.y_pred)))

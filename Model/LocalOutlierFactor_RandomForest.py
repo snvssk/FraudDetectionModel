@@ -123,9 +123,10 @@ class Model:
             self.X_train, self.X_test = X.iloc[train_index], X.iloc[test_index]
             self.y_train, self.y_test = y.iloc[train_index], y.iloc[test_index]
             i+=1
+            self.training_starting_time = round(time.time())
             Model.stkflod_RF(self)
             
-    def stkflod_RF(self):
+    def stkflod_RF(self,exec_start_time):
         logging.info('Entered into Stratified Kfold Fitting process : {}')   
         Model.fit(self)
         Model.model_result(self)
@@ -134,6 +135,7 @@ class Model:
                     'timestamp' : str(Model.current_milli_time()),
                     'modelName' : self.model_type,
                     'foldNumber' : self.foldNumber,
+                    'fold_exec_starttime' : str(self.training_starting_time),
                     'testDataSetSize': len(self.X_test),
                     'trainDataSetSize' : len(self.X_train),
                     'accuracy' : accuracy_score(self.y_test,self.y_pred),
@@ -148,7 +150,7 @@ class Model:
 
         logging.info('big query insertion : {}'.format(str(json.dumps(data))))
         Model.writeDataToBigQuery(table_id, json.loads(str(json.dumps(data))))
-        Model.packagingModel(fold_number=self.foldNumber)
+        Model.packagingModel()
         
     def current_milli_time():
         return round(time.time())
@@ -157,9 +159,9 @@ class Model:
     def writeDataToBigQuery(tableName, jsonData):
         client.insert_rows_json(tableName, jsonData)
          
-    def packagingModel(self,fold_number):
+    def packagingModel(self):
         Path('../ModelPackages/' + todaydate).mkdir(parents=True, exist_ok=True)
-        filename = '../ModelPackages/' + todaydate + "/"+ datetime.now().strftime("%Y-%m-%d %H:%M") +'_'+ str(self.model_type) +'_fold_'+ fold_number +'_model.pkl'
+        filename = '../ModelPackages/' + todaydate + "/"+ datetime.now().strftime("%Y-%m-%d %H:%M") +'_'+ str(self.model_type) +'_fold_'+ self.foldNumber + +'_model.pkl'
         
         with open(filename, 'wb') as model_file:
             pickle.dump(self.user_defined_model, model_file)

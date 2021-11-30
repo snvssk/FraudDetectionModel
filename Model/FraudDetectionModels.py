@@ -119,8 +119,8 @@ class Model:
     def model_result(self):
         if self.model_type == 'lof':
             self.y_pred=self.user_defined_model.decision_function(self.X_test)
-            self.y_pred[self.y_pred == 1] = 0 # Valid transactions are labelled as 0.
-            self.y_pred[self.y_pred == -1] = 1 # Fraudulent transactions are labelled as 1.
+            self.y_pred[self.y_pred >= 0] = 0 # Valid transactions are labelled as 0.
+            self.y_pred[self.y_pred < 0] = 1 # Fraudulent transactions are labelled as 1.
             self.auprc = 0 #for uniformity as lof does not have auprc function
             logging.info('Confusion_matrix : ')
             logging.info('{}'.format(confusion_matrix(self.y_test,self.y_pred)))

@@ -4,9 +4,20 @@ import pandas as pd
 from datetime import datetime
 from datetime import date
 import numpy as np
+from google.cloud import bigquery
+
+client = bigquery.Client()
+
 
 def getSelectedModels():
-    df = pd.read_json('MetricOutput.json')
+
+    project = "vsunku-data228-project"
+    dataset_id = "ml_project"
+    dataset_ref = bigquery.DatasetReference(project, dataset_id)
+    table_ref = dataset_ref.table("metric2")
+    table = client.get_table(table_ref)
+    df = client.list_rows(table).to_dataframe()
+
     df = pd.concat([df, df["confusionMatrix"].apply(pd.Series)], axis=1)
     df.drop(columns=['confusionMatrix'],inplace=True)
 
@@ -26,6 +37,7 @@ def getSelectedModels():
     min_recall = mean_df['F1'].min()
     mean_df = mean_df.loc[mean_df['F1'] > min_recall]
 
+    print(mean_df)
     return mean_df['modelName']
 
 getSelectedModels()

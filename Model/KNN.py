@@ -8,6 +8,7 @@ import logging
 from datetime import date
 import faiss
 from datetime import datetime
+from pathlib import Path
 import pickle 
 import time
 import json
@@ -123,7 +124,7 @@ class Model:
         Model.model_result(self)
 
     def packagingModel(self):
-        os.mkdir ('../ModelPackages/' + todaydate)
+        Path('../ModelPackages/' + todaydate).mkdir(parents=True, exist_ok=True)
         filename = '../ModelPackages/' + todaydate + "/"+ datetime.now().strftime("%Y-%m-%d %H:%M") +'_'+ str(self.model_type) + '_model.pkl' 
         
         with open(filename, 'wb') as model_file:

@@ -86,7 +86,7 @@ class Model:
             except ZeroDivisionError:
                 logging.error('Divide by Zero error at outlier fraction calculation')
                 outlier_fraction = 0
-            self.user_defined_model = LocalOutlierFactor(n_neighbors = 20,contamination = outlier_fraction)
+            self.user_defined_model = LocalOutlierFactor(n_neighbors = 20,contamination = outlier_fraction,novelty=True)
             logging.info('Model : {}'.format(self.user_defined_model))
         elif self.model_type == 'rf':
             logging.info('******** RF ******')
@@ -218,9 +218,7 @@ class Model:
         os.system('gsutil cp -r '+'../ModelPackages/' + todaydate+ ' ' +model_storage)
 
 if __name__ == '__main__':
-    model_instance1 = Model(model_type = 'lof')
-    #model_instance1.split(0.2)
-    #model_instance1.fit()        
+    model_instance1 = Model(model_type = 'lof')        
     model_instance1.kfoldValidation()
     
 

@@ -24,7 +24,7 @@ class Logger():
         today = date.today()
         todaydate = today.strftime('%d%m%Y')
 
-        handler = logging.FileHandler("logfile{}".format(todaydate))
+        handler = logging.FileHandler("DataProcessingLog{}".format(todaydate))
         handler.setLevel(logging.INFO)
 
         formatter = logging.Formatter("%(asctime)s - %(message)s")

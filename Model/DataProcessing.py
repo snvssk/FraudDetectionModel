@@ -4,10 +4,14 @@ from datetime import date
 from sklearn.preprocessing import LabelEncoder
 import logging
 import sys
+import time
 import os
+import json
+from google.cloud import bigquery
 sys.path.append("../conf")
 from gcp_conf import *
 
+client = bigquery.Client()
 
 inputfile = 'gs://'+ml_data_bucket+'/'+ml_raw_data_folder_name+"/20211116/" +ml_raw_data_file_name
 outputfolder = 'gs://'+ml_data_bucket+'/'+ml_processed_data_folder_name+"/"
@@ -20,7 +24,7 @@ class Logger():
         today = date.today()
         todaydate = today.strftime('%d%m%Y')
 
-        handler = logging.FileHandler("logfile{}".format(todaydate))
+        handler = logging.FileHandler("DataProcessingLog{}".format(todaydate))
         handler.setLevel(logging.INFO)
 
         formatter = logging.Formatter("%(asctime)s - %(message)s")
@@ -196,15 +200,34 @@ class CSVHandler():
         folder_path  = outputfolder+ todaydate
         os.mkdir(todaydate)
         filename = "processed_payments.csv"
+
+
         #export file as CSV
 
         ecsv_ = "Exporting as CSV"
         Logger.logger_funct(ecsv_)
+
+
         #Local Folder with processed CSV
         x_.to_csv(todaydate+"/"+filename, index = False)
 
+        processed_records = len(x_.index)
+
         #upload to GCS
         os.system('gsutil cp -r '+todaydate+ ' ' +outputfolder)
+
+
+        data_processing_info = [{
+            'timestamp' : str(round(time.time())),
+            'numOfInputRecords' : input_data_records,
+            'numOfProcessedRecords' : processed_records,
+            'inputDataLink' : inputfile,
+            'processedDataLink' : (outputfolder+ todaydate+"/"+filename),
+            'data_prep_starttime' : str(data_prep_starttime)
+        }]
+
+        logging.info('big query insertion : {}'.format(str(json.dumps(data_processing_info))))
+        client.insert_rows_json('ml_project.data_preparation', json.loads(str(json.dumps(data_processing_info))))
         
         
 
@@ -212,6 +235,9 @@ if __name__ == '__main__':
    
     
     df = pd.read_csv(inputfile)
+
+    input_data_records = len(df.index)
+    data_prep_starttime = round(time.time())
 
     def DataValidation(data_, amt_, obo, nbo, obd, nbd, no_, nd_):
 

@@ -23,5 +23,5 @@ pip install --upgrade pip
 
 pip install --upgrade fsspec gcsfs pandas numpy sklearn
 
-pip install --upgrade google-cloud-pubsub google-cloud-bigquery google-cloud-storage
-
+pip install --upgrade google-cloud-pubsub google-cloud-bigquery google-cloud-storage faiss-cpu
+ 
